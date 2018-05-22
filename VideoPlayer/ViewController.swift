@@ -16,6 +16,8 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     var imgDatas:[String] = []
     var videoUrls:[String] = []
     
+    var cells:[VideoTableViewCell] = []
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -59,7 +61,7 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
         cell.img.sd_setImage(with: URL.init(string: self.imgDatas[indexPath.row]))
         cell.videoUrl = self.videoUrls[indexPath.row]
         cell.controller = self
-        
+        self.cells.append(cell)
         return cell
         
     }
