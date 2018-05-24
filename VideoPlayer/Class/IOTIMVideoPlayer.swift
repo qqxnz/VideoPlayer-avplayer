@@ -259,7 +259,7 @@ class IOTIMVideoPlayer:NSObject {
     }
     
     
-    public func play(videoUrl:String,showView:UIView,frame:CGRect){
+    public func play(videoUrl:String,showView:UIView){
         
         if(self.videoUrl == videoUrl){
             self.view.removeFromSuperview()

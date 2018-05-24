@@ -96,18 +96,18 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
             print("图片")
         }
         
-        ///全屏从哪个页面跳过去
-        player.fullScreenCallBack = {
-            let rectInTableView = self.tableView.rectForRow(at: indexPath)
-            let rectInSuperview = self.tableView.convert(rectInTableView, to: self.tableView.superview)
-            return (controller:self,frame:rectInSuperview)
-        }
-        
-        ///退出全屏，要将视图重新加载显示
-        player.exitFullScreenCallBack = {
-            print("退出全屏")
-        }
-        
+//        ///全屏从哪个页面跳过去
+//        player.fullScreenCallBack = {
+//            let rectInTableView = self.tableView.rectForRow(at: indexPath)
+//            let rectInSuperview = self.tableView.convert(rectInTableView, to: self.tableView.superview)
+//            return (controller:self,frame:rectInSuperview)
+//        }
+//        
+//        ///退出全屏，要将视图重新加载显示
+//        player.exitFullScreenCallBack = {
+//            print("退出全屏")
+//        }
+//        
         ////播放状态回调
         player.stateCallBack = { (state) in
             print("-----状态--\(state)----")
@@ -123,7 +123,7 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
         
         
         
-        player.play(videoUrl: url, showView: view, frame: view.frame)
+        player.play(videoUrl: url, showView: view)
         
         
     }
