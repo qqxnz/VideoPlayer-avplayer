@@ -91,7 +91,7 @@ class IOTIMVideoPlayer:NSObject {
     
     override init() {
         super.init()
-        self.view.backgroundColor = UIColor.blue
+        self.view.backgroundColor = UIColor.clear
         self.view.addSubview(playBtn)
         self.view.addSubview(self.maxTimeLab)
         self.view.addSubview(self.currentTimeLab)
@@ -112,7 +112,7 @@ class IOTIMVideoPlayer:NSObject {
         self.fullButton.setImage(UIImage.init(named:"ic_fullscreen", in: Bundle.init(path:imgPath), compatibleWith:nil), for: UIControlState.normal)
         self.fullButton.addTarget(self, action:#selector(self.fullButtonClicked), for: UIControlEvents.touchUpInside)
         
-        
+
         slider.snp.makeConstraints { (make) in
             make.bottom.equalTo(self.view).inset(10)
             make.left.equalTo(self.view).offset(50)
@@ -201,7 +201,7 @@ class IOTIMVideoPlayer:NSObject {
             self.fullController.dis {
                 self.view.removeFromSuperview()
                 self.superview?.addSubview(self.view)
-                self.view.frame = (self.superview?.frame)!
+                self.view.frame = CGRect.init(x: 0, y: 0, width: (self.superview?.frame.size.width)!, height: (self.superview?.frame.size.height)!)
                 self.playerLayer.frame = self.view.layer.bounds;
             }
             self.fullButton.setImage(UIImage.init(named:"ic_fullscreen", in: Bundle.init(path:imgPath), compatibleWith:nil), for: UIControlState.normal)
@@ -259,13 +259,13 @@ class IOTIMVideoPlayer:NSObject {
     }
     
     
-    public func play(videoUrl:String,superview:UIView,frame:CGRect){
+    public func play(videoUrl:String,showView:UIView,frame:CGRect){
         
         if(self.videoUrl == videoUrl){
             self.view.removeFromSuperview()
-            self.superview = superview
-            superview.addSubview(self.view)
-            self.view.frame = superview.frame
+            self.superview = showView
+            superview?.addSubview(self.view)
+            self.view.frame = (superview?.frame)!
             playerLayer.frame = self.view.layer.bounds;
             return
         }
@@ -315,21 +315,16 @@ class IOTIMVideoPlayer:NSObject {
         playerLayer.videoGravity = AVLayerVideoGravity.resizeAspect
         playerLayer.contentsScale = UIScreen.main.scale
         // 赋值给自定义的View
-        //        self.playerItem.playerLayer = self.playerLayer
-        // 位置放在最底下
-        //        self.playerItem.layer.insertSublayer(playerLayer, atIndex: 0)
-
         self.view.layer.insertSublayer(playerLayer, at: 0)
-        
+        ///定时器创建
         timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.updateTime), userInfo: nil, repeats: true)
-        
+        ////第一帧截图
         if(self.videoCaptureCallBack != nil){
             self.videoCaptureCallBack!(self.videoCaptureImage())
         }
         self.view.removeFromSuperview()
-        self.superview = superview
-        superview.addSubview(self.view)
-        self.view.frame = superview.frame
+        self.superview = showView
+        self.view.frame = CGRect.init(x: 0, y: 0, width: (self.superview?.frame.size.width)!, height: (self.superview?.frame.size.height)!)
         playerLayer.frame = self.view.layer.bounds;
         self.playing = true
     }
@@ -343,7 +338,6 @@ class IOTIMVideoPlayer:NSObject {
             if(self.stateCallBack != nil){
                 self.stateCallBack!("终止")
             }
-            
             self.avplayer.currentItem?.cancelPendingSeeks()
             self.avplayer.currentItem?.asset.cancelLoading()
             self.playerItem.removeObserver(self, forKeyPath: "loadedTimeRanges")
@@ -359,6 +353,8 @@ class IOTIMVideoPlayer:NSObject {
                 self.timer = nil
             }
         }
+        
+        self.view.removeFromSuperview()
     }
     
     ///时间
@@ -538,10 +534,8 @@ class IOTIMVideoPlayer:NSObject {
                 if(self.stateCallBack != nil){
                     self.stateCallBack!("播放")
                 }
-                if(self.videoCaptureCallBack != nil){
-                    self.videoCaptureCallBack!(self.videoCaptureImage())
-                }
-                
+
+                superview?.addSubview(self.view)
             }else{
                 print("加载异常")
                 playBtn.setImage(UIImage.init(named: "ic_stop_small", in: Bundle.init(path: self.imgPath), compatibleWith: nil), for: UIControlState.normal)

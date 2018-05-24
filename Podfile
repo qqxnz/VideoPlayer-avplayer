@@ -7,6 +7,6 @@ use_frameworks!
 
 pod 'SnapKit'
 pod 'SDWebImage', '~>3.8.2'
-
+pod 'MBProgressHUD'
 end
 

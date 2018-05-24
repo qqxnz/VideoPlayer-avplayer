@@ -8,6 +8,7 @@
 
 import UIKit
 import SDWebImage
+import MBProgressHUD
 
 class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
 
@@ -21,6 +22,8 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+        self.title = "AVPLAYER演示"
         
         self.tableView = UITableView.init(frame: self.view.bounds, style: UITableViewStyle.plain)
         self.tableView.delegate = self
@@ -42,6 +45,13 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
         self.videoUrls.append("http://ysj-like.oss-cn-shenzhen.aliyuncs.com/ysj-like/ysj2018041709425830.mp4")
         
         
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem.init(title: "停止", style: UIBarButtonItemStyle.plain, target: self, action: #selector(self.stopPlayer))
+        
+        
+    }
+    
+    @objc func stopPlayer(){
+        IOTIMVideoPlayer.shared.stop()
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -76,6 +86,9 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     }
     
     func player(view:UIView,url:String,indexPath: IndexPath){
+        
+
+        
         self.playIndexPath = indexPath
         let player = IOTIMVideoPlayer.shared
         ///视频第一帧视频截图
@@ -98,12 +111,21 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
         ////播放状态回调
         player.stateCallBack = { (state) in
             print("-----状态--\(state)----")
+            if(state == "创建"){
+                MBProgressHUD.showAdded(to: view, animated: true)
+            }
+            
+            if(state == "播放" || state == "终止"){
+               MBProgressHUD.hide(for: view, animated: true)
+            }
             
         }
         
         
         
-        player.play(videoUrl: url, superview: view, frame: view.frame)
+        player.play(videoUrl: url, showView: view, frame: view.frame)
+        
+        
     }
     
     

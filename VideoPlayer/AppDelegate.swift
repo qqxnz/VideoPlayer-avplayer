@@ -23,7 +23,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //显示窗口
         self.window?.makeKeyAndVisible()
         
-        self.window?.rootViewController = ViewController ()
+        self.window?.rootViewController = UINavigationController.init(rootViewController: ViewController())
         
         
         return true
