@@ -45,13 +45,27 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
         self.videoUrls.append("http://ysj-like.oss-cn-shenzhen.aliyuncs.com/ysj-like/ysj2018041709425830.mp4")
         
         
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem.init(title: "停止", style: UIBarButtonItemStyle.plain, target: self, action: #selector(self.stopPlayer))
+//        self.navigationItem.rightBarButtonItem = UIBarButtonItem.init(title: "停止", style: UIBarButtonItemStyle.plain, target: self, action: #selector(self.stopPlayer))
+        
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem.init(title: "重播", style: UIBarButtonItemStyle.plain, target: self, action: #selector(self.replay))
+        
+        
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem.init(title: "暂停", style: UIBarButtonItemStyle.plain, target: self, action: #selector(self.pausePlayer))
         
         
     }
     
     @objc func stopPlayer(){
         IOTIMVideoPlayer.shared.stop()
+    }
+    
+    @objc func pausePlayer(){
+        IOTIMVideoPlayer.shared.pause()
+    }
+    
+    
+    @objc func replay(){
+        IOTIMVideoPlayer.shared.replay()
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -96,18 +110,18 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
             print("图片")
         }
         
-//        ///全屏从哪个页面跳过去
-//        player.fullScreenCallBack = {
-//            let rectInTableView = self.tableView.rectForRow(at: indexPath)
-//            let rectInSuperview = self.tableView.convert(rectInTableView, to: self.tableView.superview)
-//            return (controller:self,frame:rectInSuperview)
-//        }
-//        
-//        ///退出全屏，要将视图重新加载显示
-//        player.exitFullScreenCallBack = {
-//            print("退出全屏")
-//        }
-//        
+        ///全屏从哪个页面跳过去
+        player.fullScreenCallBack = {
+            let rectInTableView = self.tableView.rectForRow(at: indexPath)
+            let rectInSuperview = self.tableView.convert(rectInTableView, to: self.tableView.superview)
+            return (controller:self,frame:rectInSuperview)
+        }
+        
+        ///退出全屏，要将视图重新加载显示
+        player.exitFullScreenCallBack = {
+            print("退出全屏")
+        }
+        
         ////播放状态回调
         player.stateCallBack = { (state) in
             print("-----状态--\(state)----")

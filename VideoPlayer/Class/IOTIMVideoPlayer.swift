@@ -234,6 +234,10 @@ class IOTIMVideoPlayer:NSObject {
     
     @objc func btnShowAndHidden(){
         
+        if(self.playing == false){
+            btnState = true
+        }
+        
         if(btnState){
             self.slider.isHidden = false
             self.playBtn.isHidden = false
@@ -293,6 +297,7 @@ class IOTIMVideoPlayer:NSObject {
         if(self.stateCallBack != nil){
             self.stateCallBack!("创建")
         }
+        self.view.removeFromSuperview()
         self.fullState = false;
         self.fullButton.setImage(UIImage.init(named:"ic_fullscreen", in: Bundle.init(path:imgPath), compatibleWith:nil), for: UIControlState.normal)
         
@@ -322,7 +327,6 @@ class IOTIMVideoPlayer:NSObject {
         if(self.videoCaptureCallBack != nil){
             self.videoCaptureCallBack!(self.videoCaptureImage())
         }
-        self.view.removeFromSuperview()
         self.superview = showView
         self.view.frame = CGRect.init(x: 0, y: 0, width: (self.superview?.frame.size.width)!, height: (self.superview?.frame.size.height)!)
         playerLayer.frame = self.view.layer.bounds;
@@ -441,15 +445,29 @@ class IOTIMVideoPlayer:NSObject {
         
         self.playing = false
         playBtn.setImage(UIImage.init(named: "ic_play_small", in: Bundle.init(path: self.imgPath), compatibleWith: nil), for: UIControlState.normal)
+
+    }
+
+    ///重播
+    func replay(){
+        if(self.avplayer == nil){
+            return
+        }
+        self.view.removeFromSuperview()
+        self.view.frame = CGRect.init(x: 0, y: 0, width: (self.superview?.frame.size.width)!, height: (self.superview?.frame.size.height)!)
+        playerLayer.frame = self.view.layer.bounds;
+        self.superview?.addSubview(self.view)
+        self.playing = false
+        playBtn.setImage(UIImage.init(named: "ic_play_small", in: Bundle.init(path: self.imgPath), compatibleWith: nil), for: UIControlState.normal)
+        
         let seekTime = CMTimeMake(Int64(0), 1)
         // 指定视频位置
         self.avplayer.seek(to: seekTime, completionHandler: { (b) in
-
+            
         })
         self.slider.value = 0
-        
+        self.playAndPause()
     }
-    
     
     ///进度条点击
     @objc func sliderTouchDown(slider:UISlider){
@@ -507,7 +525,13 @@ class IOTIMVideoPlayer:NSObject {
     }
 
     
-    
+    ///暂时
+    func pause(){
+        self.playing = false
+        self.playBtn.setImage(UIImage.init(named: "ic_play_small", in: Bundle.init(path: self.imgPath), compatibleWith: nil), for: UIControlState.normal)
+        self.avplayer.pause()
+        self.btnShowAndHidden()
+    }
     
     
     ///播放监听
