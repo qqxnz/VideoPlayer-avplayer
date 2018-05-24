@@ -16,7 +16,7 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     var imgDatas:[String] = []
     var videoUrls:[String] = []
     
-    var cells:[VideoTableViewCell] = []
+    var playIndexPath:IndexPath?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -60,8 +60,12 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
         let cell:VideoTableViewCell = VideoTableViewCell.init(style: UITableViewCellStyle.default, reuseIdentifier: "VideoTableViewCell")
         cell.img.sd_setImage(with: URL.init(string: self.imgDatas[indexPath.row]))
         cell.videoUrl = self.videoUrls[indexPath.row]
-        cell.controller = self
-        self.cells.append(cell)
+        
+        cell.callBack = {
+            print("AAAAAAA")
+            self.player(view: cell.img, url: cell.videoUrl, indexPath: indexPath)
+        }
+        
         return cell
         
     }
@@ -71,7 +75,54 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
 
     }
     
+    func player(view:UIView,url:String,indexPath: IndexPath){
+        self.playIndexPath = indexPath
+        let player = IOTIMVideoPlayer.shared
+        ///视频第一帧视频截图
+        player.videoCaptureCallBack = { (img) in
+            print("图片")
+        }
+        
+        ///全屏从哪个页面跳过去
+        player.fullScreenCallBack = {
+            let rectInTableView = self.tableView.rectForRow(at: indexPath)
+            let rectInSuperview = self.tableView.convert(rectInTableView, to: self.tableView.superview)
+            return (controller:self,frame:rectInSuperview)
+        }
+        
+        ///退出全屏，要将视图重新加载显示
+        player.exitFullScreenCallBack = {
+            print("退出全屏")
+        }
+        
+        ////播放状态回调
+        player.stateCallBack = { (state) in
+            print("-----状态--\(state)----")
+            
+        }
+        
+        
+        
+        player.play(videoUrl: url, superview: view, frame: view.frame)
+    }
     
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+       
+        if(self.playIndexPath != nil){
+            let rectInTableView = self.tableView.rectForRow(at: self.playIndexPath!)
+            let rectInSuperview = self.tableView.convert(rectInTableView, to: self.tableView.superview)
+            
+            if(rectInSuperview.origin.y >= self.view.frame.size.height || rectInSuperview.size.height + rectInSuperview.origin.y < 0){
+                print("超出屏幕")
+                IOTIMVideoPlayer.shared.stop()
+                self.playIndexPath = nil
+            }
+            
+        }
+        
+    }
+
     //支持旋转
     override var shouldAutorotate: Bool {
         return true

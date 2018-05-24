@@ -15,8 +15,9 @@ class VideoTableViewCell: UITableViewCell {
     
     var videoUrl:String = ""
     
-    var controller:UIViewController!
+    typealias CellCallback = ()->()
     
+    var callBack:CellCallback?
     
     override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -35,38 +36,10 @@ class VideoTableViewCell: UITableViewCell {
     @objc func imgdidClicked(){
         print("图片点击")
         
-        let player = IOTIMVideoPlayer.shared
-        
-        self.img.addSubview(player.view)
-
-        player.view.frame = self.img.bounds
-
-        ///视频第一帧视频截图
-        player.videoCaptureCallBack = { (img) in
-
+        if(callBack != nil){
+            self.callBack!()
         }
 
-        ///全屏从哪个页面跳过去
-        player.fullScreenCallBack = {
-            return self.controller
-        }
-        
-        ///退出全屏，要将视图重新加载显示
-        player.exitFullScreenCallBack = {
-            player.view.frame = self.img.bounds
-            self.addSubview(player.view)
-        }
-        
-        ////播放状态回调
-        player.stateCallBack = { (state) in
-            print("-----状态--\(state)----")
-            
-            
-        }
-        
-        
-        
-        player.play(videoUrl: self.videoUrl)
         
     }
     

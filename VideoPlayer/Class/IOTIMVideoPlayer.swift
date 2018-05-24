@@ -25,6 +25,7 @@ class IOTIMVideoPlayer:NSObject {
     ///播放视图
     public var view:UIView = UIView()
 
+    var superview:UIView?
     ///视频总时间
     private var maxTimeLab:UILabel = UILabel()
     ///视频当前时间
@@ -62,7 +63,7 @@ class IOTIMVideoPlayer:NSObject {
     public var fullBtnClickedCallBack:IOTIMVideoPlayerFullBtnClickedCallBack?
     
     ///全屏闭包
-    typealias IOTIMVideoPlayerFullScreenCallBack = ()->(UIViewController)
+    typealias IOTIMVideoPlayerFullScreenCallBack = ()->(controller:UIViewController,frame:CGRect)
     
     ///全屏回调
     public var fullScreenCallBack:IOTIMVideoPlayerFullScreenCallBack?
@@ -197,7 +198,12 @@ class IOTIMVideoPlayer:NSObject {
     ///全屏按钮
     @objc func fullButtonClicked(){
         if(self.fullState){
-            self.fullController.dis()
+            self.fullController.dis {
+                self.view.removeFromSuperview()
+                self.superview?.addSubview(self.view)
+                self.view.frame = (self.superview?.frame)!
+                self.playerLayer.frame = self.view.layer.bounds;
+            }
             self.fullButton.setImage(UIImage.init(named:"ic_fullscreen", in: Bundle.init(path:imgPath), compatibleWith:nil), for: UIControlState.normal)
             if(self.exitFullScreenCallBack != nil){
                 self.exitFullScreenCallBack!()
@@ -207,7 +213,16 @@ class IOTIMVideoPlayer:NSObject {
             if(self.fullScreenCallBack != nil){
                 let vic = self.fullScreenCallBack!()
                 self.fullController.videoUrl = self.videoUrl
-                vic.present(self.fullController, animated: false, completion: nil)
+                
+                
+                self.view.removeFromSuperview()
+                self.fullController.playerView = self.view
+                self.fullController.view.addSubview(self.fullController.playerView)
+                self.fullController.originalFrame = vic.frame
+                self.fullController.playerView.frame = vic.frame
+                
+                
+                vic.controller.present(self.fullController, animated: false, completion: nil)
                 self.fullButton.setImage(UIImage.init(named:"ic_suoxiao", in: Bundle.init(path:imgPath), compatibleWith:nil), for: UIControlState.normal)
             }
         }
@@ -244,9 +259,13 @@ class IOTIMVideoPlayer:NSObject {
     }
     
     
-    public func play(videoUrl:String){
+    public func play(videoUrl:String,superview:UIView,frame:CGRect){
         
         if(self.videoUrl == videoUrl){
+            self.view.removeFromSuperview()
+            self.superview = superview
+            superview.addSubview(self.view)
+            self.view.frame = superview.frame
             playerLayer.frame = self.view.layer.bounds;
             return
         }
@@ -271,6 +290,9 @@ class IOTIMVideoPlayer:NSObject {
             }
         }
         
+        if(self.stateCallBack != nil){
+            self.stateCallBack!("创建")
+        }
         self.fullState = false;
         self.fullButton.setImage(UIImage.init(named:"ic_fullscreen", in: Bundle.init(path:imgPath), compatibleWith:nil), for: UIControlState.normal)
         
@@ -304,11 +326,17 @@ class IOTIMVideoPlayer:NSObject {
         if(self.videoCaptureCallBack != nil){
             self.videoCaptureCallBack!(self.videoCaptureImage())
         }
-        
+        self.view.removeFromSuperview()
+        self.superview = superview
+        superview.addSubview(self.view)
+        self.view.frame = superview.frame
         playerLayer.frame = self.view.layer.bounds;
         self.playing = true
     }
     
+    public func frameUpdate(){
+        playerLayer.frame = self.view.layer.bounds;
+    }
     
     public func stop(){
         if(self.playerItem != nil || self.playerLayer != nil || self.avplayer != nil){
@@ -401,6 +429,29 @@ class IOTIMVideoPlayer:NSObject {
         if(stateCallBack != nil){
             self.stateCallBack!("完成")
         }
+        if(self.fullState){
+            self.fullController.dis {
+                self.view.removeFromSuperview()
+                self.superview?.addSubview(self.view)
+                self.view.frame = (self.superview?.frame)!
+                self.playerLayer.frame = self.view.layer.bounds;
+            }
+            self.fullButton.setImage(UIImage.init(named:"ic_fullscreen", in: Bundle.init(path:imgPath), compatibleWith:nil), for: UIControlState.normal)
+            if(self.exitFullScreenCallBack != nil){
+                self.exitFullScreenCallBack!()
+            }
+            
+        }
+        
+        self.playing = false
+        playBtn.setImage(UIImage.init(named: "ic_play_small", in: Bundle.init(path: self.imgPath), compatibleWith: nil), for: UIControlState.normal)
+        let seekTime = CMTimeMake(Int64(0), 1)
+        // 指定视频位置
+        self.avplayer.seek(to: seekTime, completionHandler: { (b) in
+
+        })
+        self.slider.value = 0
+        
     }
     
     
@@ -460,6 +511,9 @@ class IOTIMVideoPlayer:NSObject {
     }
 
     
+    
+    
+    
     ///播放监听
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         guard let playerItem = object as? AVPlayerItem else { return }
@@ -506,25 +560,59 @@ class IOTIMVideoPlayerfullViewController: UIViewController {
     
     public var videoUrl:String = ""
     
+    public var playerView:UIView!
+    
+    public var originalFrame:CGRect?
+
+    var width:CGFloat = 0
+    var height:CGFloat = 0
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        self.view.backgroundColor = UIColor.orange
+        width = self.view.frame.size.width;
+        height = self.view.frame.size.height;
 
-
-    
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        IOTIMVideoPlayer.shared.view.frame = CGRect.init(x: 0, y: 0, width: self.view.frame.height, height: self.view.frame.width )
-        self.view.addSubview(IOTIMVideoPlayer.shared.view)
-        
-        IOTIMVideoPlayer.shared.play(videoUrl: self.videoUrl)
+
     }
     
-    @objc func dis(){
-        self.dismiss(animated: false, completion: nil)
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        ///旋转
+        UIView.animate(withDuration: 0.2) {
+            self.view.transform = CGAffineTransform(rotationAngle: CGFloat(M_PI_2));
+            self.view.bounds = CGRect.init(x: 0, y: 0, width: self.height, height: self.width)
+            self.playerView.frame = CGRect.init(x: 0, y: 0, width: self.height, height: self.width)
+            IOTIMVideoPlayer.shared.frameUpdate()
+
+        }
+        
+    }
+    
+    //隐藏状态栏
+    override var prefersStatusBarHidden: Bool {
+        return true
+    }
+
+    @objc func dis(complet:@escaping ()->()){
+
+        UIView.animate(withDuration: 0.2, animations: {
+            self.view.transform = CGAffineTransform(rotationAngle: 0);
+            self.view.bounds = CGRect.init(x: 0, y: 0, width:self.width , height: self.height)
+            if(self.originalFrame != nil){
+                self.playerView.frame = self.originalFrame!
+            }
+            IOTIMVideoPlayer.shared.frameUpdate()
+        }) { (bool) in
+            self.dismiss(animated: false, completion: {
+                complet()
+            })
+        }
+        
     }
     
     override func didReceiveMemoryWarning() {
@@ -538,11 +626,13 @@ class IOTIMVideoPlayerfullViewController: UIViewController {
         return true
     }
     
+    
+    
+
     //支持的方向
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        return UIInterfaceOrientationMask.landscapeRight
+        return UIInterfaceOrientationMask.portrait
     }
-    
     
 }
 
